@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Booking Confirmation</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+background:#0f172a;
+color:white;
+}
+
+.ticket{
+background:white;
+color:black;
+width:420px;
+margin:auto;
+padding:25px;
+border-radius:12px;
+}
+
+.qr{
+margin-top:15px;
+}
+
+button{
+padding:10px 20px;
+border:none;
+border-radius:5px;
+background:#dc3545;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#b02a37;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🎟 Booking Confirmed</h1>
+
+<div class="ticket">
+
+<h2>🎬 Movie Ticket</h2>
+
+<p><b>Booking ID:</b> {{ booking_id }}</p>
+<p><b>Show ID:</b> {{ show_id }}</p>
+<p><b>Seats:</b> {{ seats }}</p>
+<p><b>Payment Method:</b> {{ method }}</p>
+
+<hr>
+
+<h3>Enjoy Your Movie 🍿</h3>
+
+<div class="qr">
+<img src="data:image/png;base64,{{ qr_code }}" width="200">
+</div>
+
+</div>
+
+<br>
+
+<a href="/feedback">
+<button>Give Feedback</button>
+</a>
+
+</body>
+</html>
