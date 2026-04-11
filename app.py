@@ -8,10 +8,40 @@ from datetime import datetime
 app = Flask(__name__)
 
 # -------------------- HOME --------------------
+
 @app.route("/")
 def home():
-    return render_template("index.html")
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    cursor.execute("SELECT id, movie_name, poster FROM movies")
+    movies = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("index.html", movies=movies)
+
+
+@app.route("/shows/<int:movie_id>")
+def shows(movie_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT shows.id, shows.screen, shows.show_time, movies.movie_name
+        FROM shows
+        JOIN movies ON shows.movie_id = movies.id
+        WHERE movies.id = %s
+    """, (movie_id,))
+
+    shows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("shows.html", shows=shows)
 
 # -------------------- SEATS PAGE --------------------
 @app.route('/seats')
@@ -180,6 +210,78 @@ def submit_feedback():
 
     return "<h2>Thank you for your feedback! 😊</h2>"
 
+@app.route("/cancel")
+def cancel():
+    return render_template("cancel.html")
+
+@app.route("/cancel_preview", methods=["POST"])
+def cancel_preview():
+
+    booking_id = request.form.get("booking_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT bookings.id, bookings.seats, bookings.payment_method,
+               shows.screen, shows.show_time,
+               movies.movie_name
+        FROM bookings
+        JOIN shows ON bookings.show_id = shows.id
+        JOIN movies ON shows.movie_id = movies.id
+        WHERE bookings.id = %s
+    """, (booking_id,))
+
+    booking = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not booking:
+        return "<h3 style='color:red;text-align:center;'>❌ Booking not found</h3>"
+
+    return render_template("cancel_preview.html", booking=booking)
+
+@app.route("/confirm_cancel", methods=["POST"])
+def confirm_cancel():
+
+    booking_id = request.form.get("booking_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get booking details before deleting
+    cursor.execute("""
+        SELECT seats, payment_method
+        FROM bookings
+        WHERE id = %s
+    """, (booking_id,))
+    
+    booking = cursor.fetchone()
+
+    if not booking:
+        return "<h3 style='color:red;text-align:center;'>Booking not found</h3>"
+
+    seats = booking["seats"].split(",")
+    seat_count = len(seats)
+
+    ticket_price = 200
+    refund_amount = seat_count * ticket_price
+
+    # Delete booking
+    cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "refund.html",
+        booking_id=booking_id,
+        seat_count=seat_count,
+        refund_amount=refund_amount,
+        payment_method=booking["payment_method"]
+    )
 
 # -------------------- RUN APP --------------------
 if __name__ == "__main__":

@@ -2,147 +2,76 @@
 <html>
 <head>
 <title>Movie Ticket Booking</title>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-
 body{
-background-color:#0f172a;
-color:white;
+    background:#0f172a;
+    color:white;
 }
 
 .header{
-text-align:center;
-padding:20px;
-font-size:35px;
-font-weight:bold;
+    text-align:center;
+    padding:25px;
+    font-size:32px;
+    font-weight:bold;
 }
 
-.movie-card{
-transition:0.3s;
+.card{
+    background:#1e293b;
+    border-radius:15px;
+    overflow:hidden;
+    transition:0.3s;
 }
 
-.movie-card:hover{
-transform:scale(1.05);
+.card:hover{
+    transform:scale(1.05);
 }
 
-select{
-margin-bottom:10px;
+.poster{
+    width:100%;
+    height:450px;
+    object-fit:cover;
 }
-
 </style>
-
 </head>
 
 <body>
 
+<!-- Cancel Button (Fixed Top Right Corner) -->
+<a href="/cancel"
+   class="btn btn-warning position-fixed top-0 end-0 m-4 shadow">
+Cancel Ticket
+</a>
+
 <div class="header">
-🎬 Movie Ticket Booking System
+🎬 Select a Movie
 </div>
 
 <div class="container">
-
 <div class="row">
 
-<!-- Avengers -->
-<div class="col-md-4">
-<div class="card movie-card">
-<img src="/static/images/avengers.jpg" class="card-img-top">
+{% for movie in movies %}
+<div class="col-lg-4 col-md-6 mb-4">
+
+<div class="card">
+
+<img src="{{ url_for('static', filename='images/' + movie.poster) }}" class="poster">
 
 <div class="card-body text-center">
+<h4>{{ movie.movie_name }}</h4>
 
-<h5>Avengers Endgame</h5>
-<p>Action | 3h 2m</p>
-
-<select class="form-select">
-<option>Select Screen</option>
-<option>Screen 1</option>
-<option>Screen 2</option>
-</select>
-
-<select class="form-select">
-<option>Select Time</option>
-<option>10:00 AM</option>
-<option>2:00 PM</option>
-<option>7:00 PM</option>
-</select>
-
-<!-- ✅ FIXED -->
-<a href="/seats?show_id=2" class="btn btn-danger mt-2">
-Book Ticket
+<a href="/shows/{{ movie.id }}" class="btn btn-danger w-100 mt-2">
+View Shows
 </a>
 
 </div>
 </div>
-</div>
-
-<!-- Avatar -->
-<div class="col-md-4">
-<div class="card movie-card">
-<img src="/static/images/avatar.jpg" class="card-img-top">
-
-<div class="card-body text-center">
-
-<h5>Avatar 2</h5>
-<p>Sci-Fi | 3h 12m</p>
-
-<select class="form-select">
-<option>Select Screen</option>
-<option>Screen 1</option>
-<option>Screen 3</option>
-</select>
-
-<select class="form-select">
-<option>Select Time</option>
-<option>11:00 AM</option>
-<option>3:00 PM</option>
-<option>8:00 PM</option>
-</select>
-
-<!-- ✅ FIXED -->
-<a href="/seats?show_id=1" class="btn btn-danger mt-2">
-Book Ticket
-</a>
 
 </div>
-</div>
-</div>
-
-<!-- Inception -->
-<div class="col-md-4">
-<div class="card movie-card">
-<img src="/static/images/inception.jpg" class="card-img-top">
-
-<div class="card-body text-center">
-
-<h5>Inception</h5>
-<p>Thriller | 2h 28m</p>
-
-<select class="form-select">
-<option>Select Screen</option>
-<option>Screen 2</option>
-<option>Screen 3</option>
-</select>
-
-<select class="form-select">
-<option>Select Time</option>
-<option>9:00 AM</option>
-<option>1:00 PM</option>
-<option>6:00 PM</option>
-</select>
-
-<!-- ✅ FIXED -->
-<a href="/seats?show_id=3" class="btn btn-danger mt-2">
-Book Ticket
-</a>
+{% endfor %}
 
 </div>
-</div>
-</div>
-
-</div>
-
 </div>
 
 </body>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Confirm Cancellation</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body{
+    background:#0f172a;
+    color:white;
+    text-align:center;
+}
+
+.card{
+    background:#b89c41;
+    padding:30px;
+    border-radius:15px;
+    margin-top:100px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Confirm Cancellation</h3>
+<hr>
+
+<p><b>Booking ID:</b> {{ booking.id }}</p>
+<p><b>Movie:</b> {{ booking.movie_name }}</p>
+<p><b>Screen:</b> {{ booking.screen }}</p>
+<p><b>Show Time:</b> {{ booking.show_time }}</p>
+<p><b>Seats:</b> {{ booking.seats }}</p>
+<p><b>Payment:</b> {{ booking.payment_method }}</p>
+
+<form action="/confirm_cancel" method="POST">
+    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+    <button type="submit" class="btn btn-danger mt-3">
+        Confirm Cancel
+    </button>
+</form>
+
+<a href="/" class="btn btn-secondary mt-2">Go Back</a>
+
+</div>
+
+</div>
+
+</body>
+</html>
