@@ -30,11 +30,12 @@ def shows(movie_id):
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT shows.id, shows.screen, shows.show_time, movies.movie_name
-        FROM shows
-        JOIN movies ON shows.movie_id = movies.id
-        WHERE movies.id = %s
-    """, (movie_id,))
+    SELECT shows.id, shows.screen, shows.show_time, movies.movie_name
+    FROM shows
+    JOIN movies ON shows.movie_id = movies.id
+    WHERE movies.id = %s
+    ORDER BY shows.screen ASC, shows.show_time ASC
+""", (movie_id,))
 
     shows = cursor.fetchall()
 
