@@ -1,10 +1,12 @@
 import mysql.connector
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host="metro.proxy.rlwy.net",
+
+    conn = mysql.connector.connect(
+        host="localhost",
         user="root",
-        password="YOUR_PASSWORD",
-        database="railway",
-        port=26996   # ✅ hardcoded fix
+        password="Theresa@123",
+        database="movie_booking"
     )
+
+    return conn
