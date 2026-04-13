@@ -1,12 +1,11 @@
-import mysql.connector
+import os
+import psycopg2
 
 def get_db_connection():
-
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Theresa@123",
-        database="movie_booking"
+    return psycopg2.connect(
+        host=os.getenv("DB_HOST"),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        port=os.getenv("DB_PORT")
     )
-
-    return conn

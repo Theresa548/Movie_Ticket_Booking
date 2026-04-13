@@ -1,38 +1,30 @@
--- Create database
-CREATE DATABASE IF NOT EXISTS movie_booking;
-
--- Use database
-USE movie_booking;
-
 -- Movies table
-CREATE TABLE IF NOT EXISTS movies (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE movies (
+    id SERIAL PRIMARY KEY,
     movie_name VARCHAR(100) NOT NULL
 );
 
--- Shows table (NEW: each show = movie + screen + time)
-CREATE TABLE IF NOT EXISTS shows (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    movie_id INT,
+-- Shows table
+CREATE TABLE shows (
+    id SERIAL PRIMARY KEY,
+    movie_id INTEGER REFERENCES movies(id) ON DELETE CASCADE,
     screen VARCHAR(20),
-    show_time VARCHAR(20),
-    FOREIGN KEY (movie_id) REFERENCES movies(id)
+    show_time VARCHAR(20)
 );
 
--- Bookings table (linked to specific show)
-CREATE TABLE IF NOT EXISTS bookings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    show_id INT,
+-- Bookings table
+CREATE TABLE bookings (
+    id SERIAL PRIMARY KEY,
+    show_id INTEGER REFERENCES shows(id) ON DELETE CASCADE,
     seats VARCHAR(50),
-    payment_method VARCHAR(50),
-    FOREIGN KEY (show_id) REFERENCES shows(id)
+    payment_method VARCHAR(50)
 );
 
 -- Feedback table
-CREATE TABLE IF NOT EXISTS feedback (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE feedback (
+    id SERIAL PRIMARY KEY,
     name VARCHAR(100),
-    rating VARCHAR(20),
+    rating INTEGER,
     comments TEXT
 );
 
@@ -42,9 +34,10 @@ INSERT INTO movies (movie_name) VALUES
 ('Avengers'),
 ('Inception');
 
--- Insert shows (VERY IMPORTANT)
-INSERT INTO shows (movie_id, screen, show_time) VALUES
+-- Insert shows
+
 -- Avengers (movie_id = 2)
+INSERT INTO shows (movie_id, screen, show_time) VALUES
 (2, 'Screen 1', '10:00 AM'),
 (2, 'Screen 2', '2:00 PM'),
 (2, 'Screen 1', '7:00 PM'),
