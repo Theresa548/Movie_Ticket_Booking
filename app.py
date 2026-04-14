@@ -202,6 +202,33 @@ def submit_feedback():
 
     return "<h2>Thank you for your feedback! 😊</h2>"
 
+
+@app.route("/feedback")
+def feedback():
+    return render_template("feedback.html")
+
+
+@app.route("/submit_feedback", methods=["POST"])
+def submit_feedback():
+
+    name = request.form["name"]
+    rating = request.form["rating"]
+    comments = request.form["comments"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = "INSERT INTO feedback (name, rating, comments) VALUES (%s, %s, %s)"
+    cursor.execute(query, (name, rating, comments))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return "<h2>Thank you for your feedback! 😊</h2>"
+
+
 # -------------------- CANCEL PAGE --------------------
 
 @app.route("/cancel")
