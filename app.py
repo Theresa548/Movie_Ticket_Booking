@@ -14,14 +14,15 @@ def home():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id, movie_name FROM movies")
+    cursor.execute("SELECT id, movie_name, poster FROM movies")
     rows = cursor.fetchall()
 
     movies = []
     for row in rows:
         movies.append({
             "id": row[0],
-            "movie_name": row[1]
+            "movie_name": row[1],
+            "poster": row[2]
         })
 
     cursor.close()
@@ -81,11 +82,9 @@ def seats():
     cursor.close()
     conn.close()
 
-    return render_template(
-        "seats.html",
-        booked_seats=booked_seats,
-        show_id=show_id
-    )
+    return render_template("seats.html",
+                           booked_seats=booked_seats,
+                           show_id=show_id)
 
 
 # -------------------- PAYMENT --------------------
@@ -95,11 +94,9 @@ def payment():
     seats = request.args.get('seats')
     show_id = request.args.get('show_id')
 
-    return render_template(
-        "payment.html",
-        seats=seats,
-        show_id=show_id
-    )
+    return render_template("payment.html",
+                           seats=seats,
+                           show_id=show_id)
 
 
 # -------------------- CONFIRMATION --------------------
@@ -125,7 +122,7 @@ def confirmation():
     conn.close()
 
     # Use deployed URL instead of localhost
-    base_url = os.getenv("RENDER_EXTERNAL_URL", "")
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
     qr_data = f"{base_url}/verify?booking_id={booking_id}"
 
     qr = qrcode.make(qr_data)
@@ -133,14 +130,12 @@ def confirmation():
     qr.save(buffer, format="PNG")
     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-    return render_template(
-        "confirmation.html",
-        booking_id=booking_id,
-        show_id=show_id,
-        seats=seats,
-        method=method,
-        qr_code=qr_base64
-    )
+    return render_template("confirmation.html",
+                           booking_id=booking_id,
+                           show_id=show_id,
+                           seats=seats,
+                           method=method,
+                           qr_code=qr_base64)
 
 
 # -------------------- VERIFY --------------------
@@ -181,11 +176,6 @@ def verify():
 
 
 # -------------------- FEEDBACK --------------------
-
-@app.route("/feedback")
-def feedback():
-    return render_template("feedback.html")
-
 
 @app.route("/submit_feedback", methods=["POST"])
 def submit_feedback():
