@@ -101,51 +101,48 @@ def payment():
 
 # -------------------- CONFIRMATION --------------------
 
-@app.route('/confirmation', methods=["GET", "POST"])
+@app.route('/confirmation', methods=["GET"])
 def confirmation():
 
-    if request.method == "POST":
-        seats = request.form.get('seats')
-        show_id = request.form.get('show_id')
-        method = request.form.get('method')
-    else:
+    try:
         seats = request.args.get('seats')
         show_id = request.args.get('show_id')
         method = request.args.get('method')
 
-    # Safety check
-    if not seats or not show_id or not method:
-        return "Missing booking details", 400
+        if not seats or not show_id or not method:
+            return "Missing booking details", 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    cursor.execute(
-        "INSERT INTO bookings (show_id, seats, payment_method) VALUES (%s, %s, %s) RETURNING id",
-        (show_id, seats, method)
-    )
+        cursor.execute(
+            "INSERT INTO bookings (show_id, seats, payment_method) VALUES (%s, %s, %s) RETURNING id",
+            (int(show_id), seats, method)
+        )
 
-    booking_id = cursor.fetchone()[0]
-    conn.commit()
+        booking_id = cursor.fetchone()[0]
+        conn.commit()
 
-    cursor.close()
-    conn.close()
+        cursor.close()
+        conn.close()
 
-    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
-    qr_data = f"{base_url}/verify?booking_id={booking_id}"
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
+        qr_data = f"{base_url}/verify?booking_id={booking_id}"
 
-    qr = qrcode.make(qr_data)
-    buffer = io.BytesIO()
-    qr.save(buffer, format="PNG")
-    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        qr = qrcode.make(qr_data)
+        buffer = io.BytesIO()
+        qr.save(buffer, format="PNG")
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-    return render_template("confirmation.html",
-                           booking_id=booking_id,
-                           show_id=show_id,
-                           seats=seats,
-                           method=method,
-                           qr_code=qr_base64)
+        return render_template("confirmation.html",
+                               booking_id=booking_id,
+                               show_id=show_id,
+                               seats=seats,
+                               method=method,
+                               qr_code=qr_base64)
 
+    except Exception as e:
+        return f"Error occurred: {str(e)}"
 # -------------------- VERIFY --------------------
 
 @app.route('/verify')
