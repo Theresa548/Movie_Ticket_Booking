@@ -101,11 +101,21 @@ def payment():
 
 # -------------------- CONFIRMATION --------------------
 
-@app.route('/confirmation')
+@app.route('/confirmation', methods=["GET", "POST"])
 def confirmation():
-    seats = request.args.get('seats')
-    show_id = request.args.get('show_id')
-    method = request.args.get('method')
+
+    if request.method == "POST":
+        seats = request.form.get('seats')
+        show_id = request.form.get('show_id')
+        method = request.form.get('method')
+    else:
+        seats = request.args.get('seats')
+        show_id = request.args.get('show_id')
+        method = request.args.get('method')
+
+    # Safety check
+    if not seats or not show_id or not method:
+        return "Missing booking details", 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -121,7 +131,6 @@ def confirmation():
     cursor.close()
     conn.close()
 
-    # Use deployed URL instead of localhost
     base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
     qr_data = f"{base_url}/verify?booking_id={booking_id}"
 
@@ -136,7 +145,6 @@ def confirmation():
                            seats=seats,
                            method=method,
                            qr_code=qr_base64)
-
 
 # -------------------- VERIFY --------------------
 
