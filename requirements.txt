@@ -2,3 +2,4 @@ flask
 gunicorn
 psycopg2-binary
 qrcode
+psycopg2-binary
