@@ -202,6 +202,90 @@ def submit_feedback():
 
     return "<h2>Thank you for your feedback! 😊</h2>"
 
+# -------------------- CANCEL PAGE --------------------
+
+@app.route("/cancel")
+def cancel():
+    return render_template("cancel.html")
+
+
+@app.route("/cancel_preview", methods=["POST"])
+def cancel_preview():
+
+    booking_id = request.form.get("booking_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT bookings.id, bookings.seats, bookings.payment_method,
+               shows.screen, shows.show_time,
+               movies.movie_name
+        FROM bookings
+        JOIN shows ON bookings.show_id = shows.id
+        JOIN movies ON shows.movie_id = movies.id
+        WHERE bookings.id = %s
+    """, (booking_id,))
+
+    booking = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not booking:
+        return "<h3 style='color:red;text-align:center;'>❌ Booking not found</h3>"
+
+    booking_data = {
+        "id": booking[0],
+        "seats": booking[1],
+        "payment_method": booking[2],
+        "screen": booking[3],
+        "show_time": booking[4],
+        "movie_name": booking[5]
+    }
+
+    return render_template("cancel_preview.html", booking=booking_data)
+
+
+@app.route("/confirm_cancel", methods=["POST"])
+def confirm_cancel():
+
+    booking_id = request.form.get("booking_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get booking first
+    cursor.execute(
+        "SELECT seats, payment_method FROM bookings WHERE id = %s",
+        (booking_id,)
+    )
+
+    booking = cursor.fetchone()
+
+    if not booking:
+        return "<h3 style='color:red;text-align:center;'>Booking not found</h3>"
+
+    seats = booking[0].split(",")
+    seat_count = len(seats)
+
+    ticket_price = 200
+    refund_amount = seat_count * ticket_price
+
+    # Delete booking
+    cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "refund.html",
+        booking_id=booking_id,
+        seat_count=seat_count,
+        refund_amount=refund_amount,
+        payment_method=booking[1]
+    )
 
 # -------------------- RUN --------------------
 
