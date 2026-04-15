@@ -1,34 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Payment</title>
 
 <style>
+
 body{
-    font-family:Arial;
-    text-align:center;
-    background:#0f172a;
-    color:white;
+font-family:Arial;
+text-align:center;
+background:#0f172a;
+color:white;
 }
 
 .payment-box{
-    background:white;
-    color:black;
-    width:420px;
-    margin:auto;
-    padding:25px;
-    border-radius:12px;
+background:white;
+color:black;
+width:420px;
+margin:auto;
+padding:25px;
+border-radius:12px;
 }
 
 button{
-    padding:10px 20px;
-    border:none;
-    border-radius:5px;
-    background:#dc3545;
-    color:white;
-    cursor:pointer;
+padding:10px 20px;
+border:none;
+border-radius:5px;
+background:#dc3545;
+color:white;
+cursor:pointer;
 }
+
+button:hover{
+background:#b02a37;
+}
+
+hr{
+margin:10px 0;
+}
+
 </style>
+
+<script>
+
+// Invoice calculation (UNCHANGED)
+function calculateAmount(){
+
+let seatsStr = "{{ seats }}";
+let showId = parseInt("{{ show_id }}");
+
+if(!seatsStr || isNaN(showId)){
+document.getElementById("summary").innerHTML = "Error loading booking details";
+return;
+}
+
+let seats = seatsStr.split(",");
+let ticketCount = seats.filter(s => s.trim() !== "").length;
+
+// Pricing logic
+let pricePerTicket = 0;
+
+if(showId >= 1 && showId <= 3) pricePerTicket = 250;
+else if(showId >= 4 && showId <= 6) pricePerTicket = 300;
+else if(showId >= 7 && showId <= 9) pricePerTicket = 200;
+
+let subtotal = ticketCount * pricePerTicket;
+let gst = subtotal * 0.18;
+let total = subtotal + gst;
+
+// store total globally for Razorpay
+window.finalAmount = total;
+
+document.getElementById("summary").innerHTML = `
+<b>Seats:</b> ${seatsStr} <br><br>
+
+<b>Tickets:</b> ${ticketCount} <br>
+<b>Price per Ticket:</b> ₹${pricePerTicket} <br>
+
+<hr>
+
+<b>Subtotal:</b> ₹${subtotal} <br>
+<b>GST (18%):</b> ₹${gst.toFixed(2)} <br>
+
+<hr>
+
+<h3>Total Amount: ₹${total.toFixed(2)}</h3>
+`;
+
+}
+
+window.onload = calculateAmount;
+
+</script>
 
 </head>
 
@@ -38,49 +101,55 @@ button{
 
 <div class="payment-box">
 
-<h3>Invoice</h3>
+<h3>Booking Invoice</h3>
 
-<p><b>Seats:</b> {{ seats }}</p>
+<div id="summary" style="text-align:left; margin-bottom:20px;"></div>
 
-<p><b>No. of Tickets:</b> {{ ticket_count }}</p>
-<p><b>Price per Ticket:</b> ₹{{ price_per_ticket }}</p>
-
-<hr>
-
-<p><b>Subtotal:</b> ₹{{ subtotal }}</p>
-<p><b>GST (18%):</b> ₹{{ gst }}</p>
-
-<hr>
-
-<h3>Total: ₹{{ total }}</h3>
-
-<button id="pay-btn">Pay with Razorpay</button>
+<!-- ONLY BUTTON -->
+<button onclick="startPayment()">Pay with Razorpay</button>
 
 </div>
 
+<!-- Razorpay -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+
+function startPayment(){
+
+let seats = "{{ seats }}";
+let show_id = "{{ show_id }}";
+
+let total = window.finalAmount;
+
+if(!total || total <= 0){
+alert("Invalid amount");
+return;
+}
+
 var options = {
     "key": "rzp_test_SdcdrsUYh4HLqZ",
-    "amount": "{{ order.amount }}",
+    "amount": Math.round(total * 100),
     "currency": "INR",
-    "order_id": "{{ order.id }}",
+    "name": "Movie Ticket Booking",
+    "description": "Ticket Payment",
 
     "handler": function (response) {
         window.location.href =
             "/success?payment_id=" + response.razorpay_payment_id +
-            "&show_id={{ show_id }}" +
-            "&seats={{ seats }}";
+            "&show_id=" + show_id +
+            "&seats=" + seats;
+    },
+
+    "theme": {
+        "color": "#dc3545"
     }
 };
 
 var rzp = new Razorpay(options);
-
-document.getElementById('pay-btn').onclick = function(e){
-    rzp.open();
-    e.preventDefault();
+rzp.open();
 }
+
 </script>
 
 </body>

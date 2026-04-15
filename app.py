@@ -97,12 +97,20 @@ def payment():
     seats = request.args.get('seats')
     show_id = request.args.get('show_id')
 
-    # Example: price per seat
-    seat_list = seats.split(',')
-    amount = len(seat_list) * 150  # ₹150 per seat
+    if not seats:
+        return "Seats not selected", 400
+
+    seat_list = [s for s in seats.split(',') if s.strip() != ""]
+    ticket_count = len(seat_list)
+
+    # 💰 pricing logic
+    price_per_ticket = 150
+    subtotal = ticket_count * price_per_ticket
+    gst = subtotal * 0.18
+    total = subtotal + gst
 
     order = client.order.create({
-        "amount": amount * 100,  # paise
+        "amount": int(total * 100),  # paise
         "currency": "INR",
         "payment_capture": 1
     })
@@ -112,7 +120,12 @@ def payment():
         seats=seats,
         show_id=show_id,
         order=order,
-        amount=amount
+        amount=total,
+        ticket_count=ticket_count,
+        price_per_ticket=price_per_ticket,
+        subtotal=subtotal,
+        gst=gst,
+        total=total
     )
 
 @app.route('/success')
