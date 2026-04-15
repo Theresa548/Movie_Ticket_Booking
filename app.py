@@ -121,7 +121,6 @@ def success():
     show_id = request.args.get('show_id')
     seats = request.args.get('seats')
 
-    # Save booking in DB here
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -131,7 +130,26 @@ def success():
     )
     conn.commit()
 
-    return "Payment Successful & Booking Confirmed!"
+    booking_id = cur.lastrowid if hasattr(cur, "lastrowid") else None
+
+    import qrcode, io, base64
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
+
+    qr_data = f"{base_url}/verify?booking_id={booking_id}"
+
+    qr = qrcode.make(qr_data)
+    buffer = io.BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    return render_template(
+        "confirmation.html",
+        booking_id=booking_id,
+        show_id=show_id,
+        seats=seats,
+        method="Razorpay",
+        qr_code=qr_base64
+    )
 
 # -------------------- VERIFY --------------------
 
