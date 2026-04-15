@@ -104,8 +104,7 @@ def payment():
     subtotal = ticket_count * price_per_ticket
     gst = subtotal * 0.18
     total = subtotal + gst
-
-    import razorpay
+    
     client = razorpay.Client(auth=("KEY", "SECRET"))
 
     order = client.order.create({
