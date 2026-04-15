@@ -4,6 +4,9 @@ import qrcode
 import io
 import base64
 import os
+import razorpay
+
+
 
 app = Flask(__name__)
 
@@ -88,61 +91,48 @@ def seats():
 
 
 # -------------------- PAYMENT --------------------
-
+client = razorpay.Client(auth=("rzp_test_SdcdrsUYh4HLqZ", "8z7n8lHaSJ2oCx3IifP8Sq8l"))
 @app.route('/payment')
 def payment():
     seats = request.args.get('seats')
     show_id = request.args.get('show_id')
 
-    return render_template("payment.html",
-                           seats=seats,
-                           show_id=show_id)
+    # Example: price per seat
+    seat_list = seats.split(',')
+    amount = len(seat_list) * 150  # ₹150 per seat
 
+    order = client.order.create({
+        "amount": amount * 100,  # paise
+        "currency": "INR",
+        "payment_capture": 1
+    })
 
-# -------------------- CONFIRMATION --------------------
+    return render_template(
+        "payment.html",
+        seats=seats,
+        show_id=show_id,
+        order=order,
+        amount=amount
+    )
 
-@app.route('/confirmation', methods=["GET"])
-def confirmation():
+@app.route('/success')
+def success():
+    payment_id = request.args.get('payment_id')
+    show_id = request.args.get('show_id')
+    seats = request.args.get('seats')
 
-    try:
-        seats = request.args.get('seats')
-        show_id = request.args.get('show_id')
-        method = request.args.get('method')
+    # Save booking in DB here
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        if not seats or not show_id or not method:
-            return "Missing booking details", 400
+    cur.execute(
+        "INSERT INTO bookings (show_id, seats, payment_method) VALUES (%s, %s, %s)",
+        (show_id, seats, "Razorpay")
+    )
+    conn.commit()
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    return "Payment Successful & Booking Confirmed!"
 
-        cursor.execute(
-            "INSERT INTO bookings (show_id, seats, payment_method) VALUES (%s, %s, %s) RETURNING id",
-            (int(show_id), seats, method)
-        )
-
-        booking_id = cursor.fetchone()[0]
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-        base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
-        qr_data = f"{base_url}/verify?booking_id={booking_id}"
-
-        qr = qrcode.make(qr_data)
-        buffer = io.BytesIO()
-        qr.save(buffer, format="PNG")
-        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
-
-        return render_template("confirmation.html",
-                               booking_id=booking_id,
-                               show_id=show_id,
-                               seats=seats,
-                               method=method,
-                               qr_code=qr_base64)
-
-    except Exception as e:
-        return f"Error occurred: {str(e)}"
 # -------------------- VERIFY --------------------
 
 @app.route('/verify')
