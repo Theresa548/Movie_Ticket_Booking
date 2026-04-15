@@ -97,12 +97,19 @@ def payment():
     seats = request.args.get('seats')
     show_id = request.args.get('show_id')
 
-    # Example: price per seat
     seat_list = seats.split(',')
-    amount = len(seat_list) * 150  # ₹150 per seat
+    ticket_count = len([s for s in seat_list if s.strip() != ""])
+
+    price_per_ticket = 200
+    subtotal = ticket_count * price_per_ticket
+    gst = subtotal * 0.18
+    total = subtotal + gst
+
+    import razorpay
+    client = razorpay.Client(auth=("KEY", "SECRET"))
 
     order = client.order.create({
-        "amount": amount * 100,  # paise
+        "amount": int(total * 100),
         "currency": "INR",
         "payment_capture": 1
     })
@@ -111,8 +118,12 @@ def payment():
         "payment.html",
         seats=seats,
         show_id=show_id,
-        order=order,
-        amount=amount
+        ticket_count=ticket_count,
+        price_per_ticket=price_per_ticket,
+        subtotal=subtotal,
+        gst=gst,
+        total=total,
+        order=order
     )
 
 @app.route('/success')

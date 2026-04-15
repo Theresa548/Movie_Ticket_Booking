@@ -28,10 +28,6 @@ button{
     color:white;
     cursor:pointer;
 }
-
-button:hover{
-    background:#b02a37;
-}
 </style>
 
 </head>
@@ -42,39 +38,40 @@ button:hover{
 
 <div class="payment-box">
 
-<h3>Booking Summary</h3>
+<h3>Invoice</h3>
 
 <p><b>Seats:</b> {{ seats }}</p>
-<p><b>Total Amount:</b> ₹{{ amount }}</p>
+
+<p><b>No. of Tickets:</b> {{ ticket_count }}</p>
+<p><b>Price per Ticket:</b> ₹{{ price_per_ticket }}</p>
+
+<hr>
+
+<p><b>Subtotal:</b> ₹{{ subtotal }}</p>
+<p><b>GST (18%):</b> ₹{{ gst }}</p>
+
+<hr>
+
+<h3>Total: ₹{{ total }}</h3>
 
 <button id="pay-btn">Pay with Razorpay</button>
 
 </div>
 
-<!-- Razorpay Script -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-
 var options = {
-    "key": "rzp_test_SdcdrsUYh4HLqZ",   
-    "amount": "{{ order.amount }}",  // in paise
+    "key": "rzp_test_SdcdrsUYh4HLqZ",
+    "amount": "{{ order.amount }}",
     "currency": "INR",
-    "name": "Movie Ticket Booking",
-    "description": "Seat Booking Payment",
     "order_id": "{{ order.id }}",
 
     "handler": function (response) {
-
-        // Redirect to success route after payment
         window.location.href =
             "/success?payment_id=" + response.razorpay_payment_id +
             "&show_id={{ show_id }}" +
             "&seats={{ seats }}";
-    },
-
-    "theme": {
-        "color": "#dc3545"
     }
 };
 
@@ -84,7 +81,6 @@ document.getElementById('pay-btn').onclick = function(e){
     rzp.open();
     e.preventDefault();
 }
-
 </script>
 
 </body>
