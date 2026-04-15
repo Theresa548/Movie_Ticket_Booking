@@ -124,15 +124,18 @@ def success():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        "INSERT INTO bookings (show_id, seats, payment_method) VALUES (%s, %s, %s)",
-        (show_id, seats, "Razorpay")
-    )
+    # ✅ SINGLE INSERT ONLY
+    cur.execute("""
+        INSERT INTO bookings (show_id, seats, payment_method)
+        VALUES (%s, %s, %s)
+        RETURNING id
+    """, (show_id, seats, "Razorpay"))
+
+    booking_id = cur.fetchone()[0]
     conn.commit()
 
-    booking_id = cur.lastrowid if hasattr(cur, "lastrowid") else None
+    import qrcode, io, base64, os
 
-    import qrcode, io, base64
     base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:5000")
 
     qr_data = f"{base_url}/verify?booking_id={booking_id}"
@@ -141,6 +144,9 @@ def success():
     buffer = io.BytesIO()
     qr.save(buffer, format="PNG")
     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    cur.close()
+    conn.close()
 
     return render_template(
         "confirmation.html",
